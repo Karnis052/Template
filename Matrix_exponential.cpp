@@ -18,7 +18,7 @@ const int N = 1e5 + 5;
 struct info
 {
 	ll a[2][2] = {{0, 0}, {0, 0}};
-	info operator *(const info &other)
+	info operator *(const info &other)const
 	{
 		info rem;
 		for (int i = 0; i < 2; i++)
@@ -45,10 +45,7 @@ void Matix_MUL(ll b)
 int main()
 {
 	ios::sync_with_stdio(false);   cin.tie(0);
-#ifndef ONLINE_JUDGE
-	freopen("input.txt", "r", stdin);
-	freopen("output.txt", "w", stdout);
-#endif
+
 	ll n;
 	cin >> n;
 	mat.a[0][0] = 0;
@@ -56,7 +53,6 @@ int main()
 	mat.a[1][0] = 1;
 	mat.a[1][1] = 1;
 	Matix_MUL(n);
-	//ll ans =
 	cout << fixed << setprecision(12) << pro.a[1][0] << endl;
 
 	return 0;

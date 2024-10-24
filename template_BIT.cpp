@@ -51,3 +51,7 @@ int main()
 
 
 
+struct BIT {
+    int tr[N];
+
+}

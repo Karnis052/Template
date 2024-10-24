@@ -22,10 +22,13 @@ int main()
     for (int i = 0; i < n; i++) // ensure source to source 0 distance
         dist[i][i] = 0;
     for (int k = 0; k < n; k++) // trying to place every vertex as a connecting vertex
+    {
         for (int i = 0; i < n; i++) // source vertex
             for (int j = 0; j < n; j++) // destination
                 if (dist[i][k] < INF and dist[k][j] < INF)
                     dist[i][j]  = min(dist[i][j], dist[i][k] + dist[k][j]);
+
+    }
     for (int i = 0; i < n; i++)
         if (dist[i][i] < 0)
         {
