@@ -34,6 +34,7 @@ ostream &operator << (ostream &out, PT &p) 	{ return out << "(" << p.x << "," <<
 
 
 
+
 PT translate(PT a, PT b)        { return PT{a.x + b.x, a.y + b.y};}
 PT scale(PT c, double factor, PT p) { return  PT{c.x + (p.x - c.x)*factor, c.y + (p.y - c.y)*factor	};}
 
@@ -88,7 +89,7 @@ void polarSort(vector<PT>&v) { //sort points in counterclockwise starting from 3
 
 
 void polarSort(vector<PT>&v, PT o) { // sort points in counterclockwise with respect to point o instead of origin (0,0)
-	sort(v.begin(), v.end(), [](PT a, PT b) {
+	sort(v.begin(), v.end(), [&](PT & a, PT & b) {
 		return make_tuple(half(a - o), 0.0, (a - o).norm2()) < make_tuple(half(b - o), cross(a - o, b - o), (b - o).norm2());
 	});
 
@@ -107,7 +108,7 @@ bool isConvex(vector<PT>p) {
 
 struct line {
 	PT v; double c;
-	line() {v = 0, c = 0}
+	line() {v = {0, 0}; c = 0;}
 	line(PT v, double c): v(v), c(c) {} // v = direction vector of line = (b, -a)
 	line(double a, double b, double c): v(b, -a), c(c) {}  // from equation ax+by=c
 	line(PT p, PT q): v(q - p), c(cross(v, p)) {} // V = (b,-a) = PQ and PQ = q-p, c = (V x P)
@@ -115,23 +116,23 @@ struct line {
 	// side(P)>0 if on the left, side(P) <0 if on the right, 0 if on the line
 	int side_of_point_respect_to_line(PT p)   { return cross(v, p) - c; } // for point P = (x, y) and  side(P) = ax + by-c => (V x P) - c
 	double dist_from_point_to_line(PT p)      { return abs(cross(v, p) - c) / v.norm(); } //distance = |a·x + b·y - c| / |v|   => (|side(p)|) / |v|
-	double sqDist_from_point_to_line(PT)      { return (cross(v, p) - c) * (cross(v, p) - c) / v.norm2() ;}
-	line perpThrough(PT p);                   { return {p, p + perp(v)} ; }
-	bool cmpProj(PT p, PT q);                 { return dot(v, p) < dot(v, q); }  //sort along line
+	double sqDist_from_point_to_line(PT p)    { return ((cross(v, p) - c) * (cross(v, p) - c) / v.norm2());}
+	line perpThrough(PT p)                    { return {p, p + perp(v)}; }
+	bool cmpProj(PT p, PT q)                  { return dot(v, p) < dot(v, q); }  //sort along line
 	line translate(PT t)  					  { return {v, c + cross(v, t)}; } // translate line l by vector vector(t)
 
-	void shiftLeft(double dist);              { return {v, c + dist * v.norm()}; }
-	PT proj(PT p);						      { return p - perp(p) * side_of_point_respect_to_line(p) / v.norm2(); }
-	PT refl(PT p); 							  { return  p - perp(p) * 2 * side_of_point_respect_to_line(p) / v.norm2(); }
+	line shiftLeft(double dist)               { return {v, c + dist * v.norm()}; }
+	PT proj(PT p)					          { return p - perp(p) * side_of_point_respect_to_line(p) / v.norm2(); }
+	PT refl(PT p) 							  { return  p - perp(p) * 2 * side_of_point_respect_to_line(p) / v.norm2(); }
 
-}
+};
 
 line bisector(line l1, line l2, bool interior)
 {
 	assert(cross(l1.v, l2.v) != 0);
-	double sign = interior ? 1 : -1 :
-	              return { l2.v / v.norm() + l1.v / v.norm()*sign,
-	                       l2.c / c.norm() + l1.c / c.norm()*sign };
+	double sign = interior ? 1 : -1 ;
+	return { l2.v / l2.v.norm() + l1.v / l1.v.norm()*sign,
+	         l2.c / abs(l2.c) + l1.c / abs(l1.c)*sign };
 }
 
 
@@ -156,7 +157,7 @@ bool segment_segment_intersection(PT a, PT b, PT c, PT d, PT &out)
 	double od = orientation(a, b, d);
 
 	// proper intersection exist iff opposite sign
-	if (oa * ob < 0 and oc < od < 0)
+	if (oa * ob < 0 and oc * od < 0)
 	{
 		out = (a * ob - b * oa) / (ob - oa); // intersection point
 		return true;
@@ -164,7 +165,7 @@ bool segment_segment_intersection(PT a, PT b, PT c, PT d, PT &out)
 	return false;
 }
 
-bool cmpX{
+struct cmpX {
 	bool operator()(PT a, PT b) {
 		return make_pair(a.x, a.y) < make_pair(b.x, b.y);
 	}
@@ -180,7 +181,7 @@ set<PT, cmpX> segment_segment_intersection_inside(PT a, PT b, PT c, PT d) {
 	if (onSegment(a, b, d)) s.insert(d);
 	return s;
 }
-double segment_point_distance(PT a, PT b, PT c)
+double segment_point_distance(PT a, PT b, PT p)
 {
 	if (a != b) {
 		line l(a, b);
@@ -188,7 +189,7 @@ double segment_point_distance(PT a, PT b, PT c)
 			return l.dist_from_point_to_line(p);  // output distance to line
 
 	}
-	return min(abs(p - a), abs(p - b));
+	return min((p - a).norm(), (p - b).norm());
 }
 
 double segement_segment_distance(PT a, PT b, PT c, PT d)
