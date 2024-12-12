@@ -142,7 +142,7 @@ bool inDisk(PT a, PT b, PT p)
 	return dot(a - p, b - p) <= 0;
 }
 
-// Point P on the segment [AB] if lies on the line AB or inDisk of [AB]
+// Point P on the segment [AB] if lies on the line AB and inDisk of [AB]
 bool onSegment(PT a, PT b, PT p)
 {
 	return orientation(a, b, p) == 0  and inDisk(a, b, p);
@@ -166,10 +166,11 @@ bool segment_segment_intersection(PT a, PT b, PT c, PT d, PT &out)
 }
 
 struct cmpX {
-	bool operator()(PT a, PT b) {
+	bool operator()( const PT &a, const PT b) const {
 		return make_pair(a.x, a.y) < make_pair(b.x, b.y);
 	}
 };
+// s size 0 = no intersection, s size 1 = proper or one end intersection, s size 2 = stays within line
 
 set<PT, cmpX> segment_segment_intersection_inside(PT a, PT b, PT c, PT d) {
 	PT out;
@@ -200,6 +201,83 @@ double segement_segment_distance(PT a, PT b, PT c, PT d)
 		segment_point_distance(a, b, c), segment_point_distance(a, b, d),
 		segment_point_distance(c, d, a), segment_point_distance(c, d, b)
 	});
+}
+double areaTriangle(PT a, PT b, PT c) {
+	return abs(cross(b - a, c - a)) / 2.0;
+}
+
+double areaPolygon(vector<PT>p) {
+	double  area = 0.0;
+	for (int i = 0, n = p.size(); i < n; i++)
+	{
+		area += cross(p[i], p[(i + 1) % n]);
+	}
+	return abs(area) / 2.0;
+}
+
+bool above(PT a, PT p)
+{
+	return p.y >= a.y;
+}
+
+bool crossesRay(PT a, PT p, PT q)
+{
+	return (above(a, q) - above(a, p)) * orientation(a, p, q) > 0;
+}
+
+// Point a is in polygon area, on boundary, out of boundary
+bool inPolygon(vector<PT>p, PT a, bool strict = true)
+{
+	int numCrossings = 0;
+	for (int i = 0, n = p.size(); i < n; i++)
+	{
+		if (onSegment(p[i], p[(i + 1) % n], a))
+			return !strict;
+		numCrossings += crossesRay(a, p[i], p[(i + 1) % n]);
+
+	}
+	return numCrossings & 1;
+
+}
+
+double angleTravelled(PT a, PT p, PT q)
+{
+	double ampli = angle(p - a, q - a);
+	if (orientation(a, p, q) > 0) return ampli;
+	else return -ampli;
+}
+
+struct angleType {
+	PT d; int t = 0;
+	angleType(PT d): d(d) {}
+	angleType(PT d, int t): d(d), t(t) {}
+	angleType t180() { return {d*(-1), t + half(d)}; }
+	angleType t360() { return {d, t + 1}; }
+};
+
+bool operator<(const angleType a, const angleType b) {
+	return make_tuple(a.t, half(a.d), 0) < make_tuple(b.t, half(b.d), cross(a.d, b.d));
+}
+
+
+
+angleType moveTo(angleType a, PT newD)
+{
+	assert(!onSegment(a.d, newD, {0, 0}));
+	angleType b{newD, a.t};
+	if (a.t180() < b)
+		b.t--;
+	if (b.t180() < a)
+		b.t++;
+	return b;
+}
+
+int windingNumber(vector<PT>p, PT x)
+{
+	angleType a(x);
+	for (PT d : p)
+		a = moveTo(a, d);
+	return a.t;
 }
 
 void debug(PT a)
