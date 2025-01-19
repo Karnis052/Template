@@ -280,6 +280,15 @@ int windingNumber(vector<PT>p, PT x)
 	return a.t;
 }
 
+PT circumCenter(PT a, PT b, PT c)
+{
+	b = b - a, c = c - a;
+	assert(cross(b, c) != 0);
+	return a + perp(b * c.norm2() - c * b.norm2()) / cross(b, c) / 2;
+
+
+}
+
 void debug(PT a)
 {
 	cout << a.x << " " << a.y << endl;
