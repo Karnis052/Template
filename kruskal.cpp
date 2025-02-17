@@ -40,6 +40,7 @@ void merge(int u, int v)
     ra[u]++;
 }
 
+
 void Kruskal()
 {
   int cost, u, v;
@@ -54,6 +55,8 @@ void Kruskal()
     }
   }
 }
+
+
 int main()
 {
   ios::sync_with_stdio(false);   cin.tie(0); cout.tie(0);
