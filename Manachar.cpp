@@ -32,15 +32,19 @@ int main()
     int mir = cen - (i - cen);
     if (i < rb)
       pal[i] = min(rb - i, pal[mir]);
+
     int l = i - pal[i] - 1, r = i + pal[i] + 1;
     while (l >= 0 and r < n and ns[l] == ns[r])
       pal[i]++, l--, r++;
+
     if (i + pal[i] > rb)
     {
       rb = i + pal[i];
       cen = i;
     }
+
   }
+
   int ans = 0;
   for (int i = 0; i < n; i++)
     ans = max(ans, pal[i]);
